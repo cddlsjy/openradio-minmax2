@@ -1,0 +1,32 @@
+# Build files
+build/
+.gradle/
+.idea/
+*.iml
+*.iws
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Local properties
+local.properties
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Gradle wrapper
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
