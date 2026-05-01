@@ -175,43 +175,104 @@ class MainActivity : AppCompatActivity() {
         mStations.clear()
         mStations.addAll(storage.getAll())
 
-        // Add some sample stations if empty (for demonstration)
+        // Add sample stations if empty (real radio station URLs)
         if (mStations.isEmpty()) {
             addSampleStations()
+            // Re-load after adding
+            mStations.addAll(storage.getAll())
         }
 
         mAdapter.submitList(mStations.toList())
     }
 
     private fun addSampleStations() {
-        // Sample radio stations for demonstration
+        // Real sample radio stations for China
         val sampleStations = listOf(
             RadioStation().apply {
                 id = "1"
-                name = "Pop Radio"
-                genre = "Pop"
-                countryCode = "US"
+                name = "湖南交通广播"
+                genre = "Traffic"
+                countryCode = "CN"
                 mediaStream.bitRate = 128
-                mediaStream.streamUrl = "http://stream.example.com/pop"
+                mediaStream.streamUrl = "http://a.live.hnradio.com/jtpd/radio120k_jtpd.m3u8?auth_key=1588751155-0-0-301d7e28868eff70a72edf5e4569b546"
             },
             RadioStation().apply {
                 id = "2"
-                name = "Rock FM"
-                genre = "Rock"
-                countryCode = "UK"
-                mediaStream.bitRate = 192
-                mediaStream.streamUrl = "http://stream.example.com/rock"
+                name = "CNR-1 中国之声"
+                genre = "News"
+                countryCode = "CN"
+                mediaStream.bitRate = 128
+                mediaStream.streamUrl = "http://ngcdn001.cnr.cn/live/zgzs/index.m3u8"
             },
             RadioStation().apply {
                 id = "3"
-                name = "Classical Music"
-                genre = "Classical"
-                countryCode = "DE"
-                mediaStream.bitRate = 256
-                mediaStream.streamUrl = "http://stream.example.com/classical"
+                name = "CNR-15 中国交通广播"
+                genre = "Traffic"
+                countryCode = "CN"
+                mediaStream.bitRate = 128
+                mediaStream.streamUrl = "https://ngcdn002.cnr.cn/live/gsgljtgb/index.m3u8"
+            },
+            RadioStation().apply {
+                id = "4"
+                name = "CMG 环球资讯广播"
+                genre = "News"
+                countryCode = "CN"
+                mediaStream.bitRate = 128
+                mediaStream.streamUrl = "https://sk.cri.cn/905.m3u8"
+            },
+            RadioStation().apply {
+                id = "5"
+                name = "CNR-2 经济之声"
+                genre = "Business"
+                countryCode = "CN"
+                mediaStream.bitRate = 128
+                mediaStream.streamUrl = "http://ngcdn002.cnr.cn/live/jjzs/index.m3u8"
+            },
+            RadioStation().apply {
+                id = "6"
+                name = "AsiaFM 高清音乐台"
+                genre = "Music"
+                countryCode = "CN"
+                mediaStream.bitRate = 128
+                mediaStream.streamUrl = "http://asiafm.hk:8000/asiahd"
+            },
+            RadioStation().apply {
+                id = "7"
+                name = "AsiaFM 亚洲热歌台"
+                genre = "Pop"
+                countryCode = "CN"
+                mediaStream.bitRate = 128
+                mediaStream.streamUrl = "http://hot.asiafm.net:8000/asiafm"
+            },
+            RadioStation().apply {
+                id = "8"
+                name = "深圳交通广播"
+                genre = "Traffic"
+                countryCode = "CN"
+                mediaStream.bitRate = 64
+                mediaStream.streamUrl = "http://lhttp.qingting.fm/live/1272/64k.mp3"
+            },
+            RadioStation().apply {
+                id = "9"
+                name = "上海交通广播"
+                genre = "Traffic"
+                countryCode = "CN"
+                mediaStream.bitRate = 64
+                mediaStream.streamUrl = "http://lhttp.qingting.fm/live/266/64k.mp3"
+            },
+            RadioStation().apply {
+                id = "10"
+                name = "北京交通广播"
+                genre = "Traffic"
+                countryCode = "CN"
+                mediaStream.bitRate = 64
+                mediaStream.streamUrl = "https://lhttp.qingting.fm/live/336/64k.mp3"
             }
         )
-        mStations.addAll(sampleStations)
+
+        // Save to storage
+        val storage = DependencyRegistryCommon.getRadioStationsStorage(Country.COUNTRY_CODE_DEFAULT)
+        storage.addAll(sampleStations)
     }
 
     private fun onStationClicked(station: RadioStation) {

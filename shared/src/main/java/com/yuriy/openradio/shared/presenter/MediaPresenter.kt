@@ -206,7 +206,7 @@ class MediaPresenter : Player.Listener {
         mMediaController?.apply {
             setMediaItem(mediaItem)
             prepare()
-            play()
+            playWhenReady = true
         }
         updatePlaybackState(PlaybackState.STATE_BUFFERING)
     }
@@ -234,10 +234,24 @@ class MediaPresenter : Player.Listener {
 
     // Player.Listener implementation
     override fun onPlaybackStateChanged(playbackState: Int) {
-        updatePlaybackState(playbackState)
+        val state = when (playbackState) {
+            Player.STATE_BUFFERING -> PlaybackState.STATE_BUFFERING
+            Player.STATE_READY -> PlaybackState.STATE_READY
+            Player.STATE_ENDED -> PlaybackState.STATE_ENDED
+            Player.STATE_IDLE -> PlaybackState.STATE_IDLE
+            else -> PlaybackState.STATE_IDLE
+        }
+        updatePlaybackState(state)
+        
         when (playbackState) {
             Player.STATE_BUFFERING -> mListener?.showProgressBar()
-            Player.STATE_READY -> mListener?.hideProgressBar()
+            Player.STATE_READY -> {
+                mListener?.hideProgressBar()
+                // Player is ready, start playing if not already
+                if (mMediaController?.isPlaying == false && mCurrentMediaItem != null) {
+                    mMediaController?.play()
+                }
+            }
             Player.STATE_ENDED -> updatePlaybackState(PlaybackState.STATE_ENDED)
             Player.STATE_IDLE -> updatePlaybackState(PlaybackState.STATE_IDLE)
         }

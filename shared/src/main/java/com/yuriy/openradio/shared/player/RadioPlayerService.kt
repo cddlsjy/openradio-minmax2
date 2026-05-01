@@ -23,7 +23,10 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -32,6 +35,7 @@ import androidx.media3.session.MediaSessionService
  * Radio player service that handles media playback in the background.
  * Uses Media3 ExoPlayer for audio streaming and provides media session support.
  */
+@UnstableApi
 class RadioPlayerService : MediaSessionService() {
 
     private var mMediaSession: MediaSession? = null
@@ -59,36 +63,42 @@ class RadioPlayerService : MediaSessionService() {
     }
 
     private fun initializePlayer() {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(C.USAGE_MEDIA)
+            .setContentType(C.CONTENT_TYPE_MUSIC)
+            .build()
+
         mExoPlayer = ExoPlayer.Builder(this)
+            .setAudioAttributes(audioAttributes, true)
             .setHandleAudioBecomingNoisy(true)
             .build()
             .apply {
-                // Add player listener for playback state changes
                 addListener(object : Player.Listener {
                     override fun onPlaybackStateChanged(playbackState: Int) {
-                        // Handle playback state changes
                         when (playbackState) {
                             Player.STATE_BUFFERING -> {
-                                // Show buffering notification
+                                updateNotification("Buffering...")
                             }
                             Player.STATE_READY -> {
-                                // Playback ready
+                                updateNotification(if (isPlaying) "Playing" else "Paused")
                             }
                             Player.STATE_ENDED -> {
-                                // Playback ended
+                                updateNotification("Stopped")
                             }
                             Player.STATE_IDLE -> {
-                                // Player idle
+                                updateNotification("Idle")
                             }
                         }
                     }
 
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
-                        // Update notification based on playing state
+                        if (isPlaying) {
+                            updateNotification("Playing")
+                        }
                     }
 
                     override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                        // Handle playback error
+                        updateNotification("Error: ${error.message}")
                     }
                 })
             }
@@ -96,10 +106,33 @@ class RadioPlayerService : MediaSessionService() {
 
     private fun initializeMediaSession() {
         mExoPlayer?.let { player ->
-            mMediaSession = MediaSession.Builder(this, player)
-                .setCallback(MediaSessionCallback())
-                .build()
+            mMediaSession = MediaSession.Builder(this, player).build()
         }
+    }
+
+    private fun updateNotification(status: String) {
+        val notification = createNotification(status)
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(NOTIFICATION_ID, notification)
+    }
+
+    private fun createNotification(status: String): Notification {
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, Class.forName("com.yuriy.openradio.mobile.view.activity.MainActivity")),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("OpenRadio")
+            .setContentText(status)
+            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
+        return builder.build()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -108,7 +141,7 @@ class RadioPlayerService : MediaSessionService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = mMediaSession?.player
-        if (player != null && !player.playWhenReady) {
+        if (player != null && !player.isPlaying) {
             stopSelf()
         }
     }
@@ -121,10 +154,6 @@ class RadioPlayerService : MediaSessionService() {
         }
         mExoPlayer = null
         super.onDestroy()
-    }
-
-    private inner class MediaSessionCallback : MediaSession.Callback {
-        // Custom callback implementation if needed
     }
 
     companion object {
